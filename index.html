@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="TimeFlow — website manajemen waktu sederhana untuk mahasiswa: catat tugas, atur jadwal, fokus, dan pantau produktivitas." />
+<title>TimeFlow — Manajemen Waktu Mahasiswa</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%233b82f6'/><circle cx='50' cy='50' r='26' fill='none' stroke='white' stroke-width='8'/><path d='M50 36v16l10 6' stroke='white' stroke-width='8' fill='none' stroke-linecap='round'/></svg>" />
+</head>
+<body>
+
+<!-- ================= ICON SPRITE ================= -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-dashboard" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="18" r="1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5L20 6.5"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16z"/><path d="m14.5 5.5 4 4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></symbol>
+</svg>
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.4l3 1.8"/></svg>
+    </div>
+    <div class="brand-text">
+      <strong>TimeFlow</strong>
+      <span>Manajemen Waktu</span>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Navigasi utama">
+    <button class="nav-item active" data-view="dashboard">
+      <svg class="ico"><use href="#i-dashboard"/></svg><span>Dashboard</span>
+    </button>
+    <button class="nav-item" data-view="tasks">
+      <svg class="ico"><use href="#i-list"/></svg><span>Kegiatan</span>
+      <em class="nav-badge" id="navTaskBadge">0</em>
+    </button>
+    <button class="nav-item" data-view="schedule">
+      <svg class="ico"><use href="#i-clock"/></svg><span>Jadwal</span>
+    </button>
+    <button class="nav-item" data-view="calendar">
+      <svg class="ico"><use href="#i-calendar"/></svg><span>Kalender</span>
+    </button>
+    <button class="nav-item" data-view="timer">
+      <svg class="ico"><use href="#i-timer"/></svg><span>Timer</span>
+    </button>
+  </nav>
+
+  <div class="side-progress">
+    <div class="side-progress-head">
+      <span>Produktivitas</span>
+      <strong id="sideProgressPct">0%</strong>
+    </div>
+    <div class="bar"><div class="bar-fill" id="sideProgressBar" style="width:0%"></div></div>
+    <p id="sideProgressText">Belum ada kegiatan</p>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">Dashboard</h1>
+      <p id="pageSubtitle">Ringkasan aktivitas dan produktivitasmu hari ini.</p>
+    </div>
+    <div class="topbar-actions">
+      <span class="date-chip" id="topDate">—</span>
+      <button class="btn btn-primary" id="openAddBtn">
+        <svg class="ico"><use href="#i-plus"/></svg>
+        <span>Tambah Kegiatan</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view active" id="view-dashboard">
+    <div class="greeting-card">
+      <div class="greeting-text">
+        <p class="greeting-eyebrow" id="greetingEyebrow">Selamat pagi 👋</p>
+        <h2 id="greetingTitle">Halo, Mahasiswa!</h2>
+        <p id="greetingBody">Hari ini adalah waktu yang tepat untuk menyusun rencana dan mulai mengerjakan hal-hal penting.</p>
+        <div class="greeting-date">
+          <svg class="ico"><use href="#i-calendar"/></svg>
+          <span id="greetingDate">—</span>
+        </div>
+      </div>
+      <div class="greeting-ring">
+        <svg viewBox="0 0 120 120" class="ring">
+          <circle class="ring-track" cx="60" cy="60" r="50"/>
+          <circle class="ring-fill" id="dashRing" cx="60" cy="60" r="50"/>
+        </svg>
+        <div class="ring-label">
+          <strong id="dashPct">0%</strong>
+          <span>selesai</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <article class="card stat">
+        <div class="stat-icon blue"><svg class="ico"><use href="#i-list"/></svg></div>
+        <div>
+          <p class="stat-label">Total Kegiatan</p>
+          <h3 id="statTotal">0</h3>
+          <p class="stat-note">Seluruh kegiatan tercatat</p>
+        </div>
+      </article>
+      <article class="card stat">
+        <div class="stat-icon green"><svg class="ico"><use href="#i-check"/></svg></div>
+        <div>
+          <p class="stat-label">Sudah Selesai</p>
+          <h3 id="statDone">0</h3>
+          <p class="stat-note">Kerja bagus, terus lanjut!</p>
+        </div>
+      </article>
+      <article class="card stat">
+        <div class="stat-icon amber"><svg class="ico"><use href="#i-clock"/></svg></div>
+        <div>
+          <p class="stat-label">Belum Selesai</p>
+          <h3 id="statPending">0</h3>
+          <p class="stat-note">Sisa kegiatan menantimu</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="dash-columns">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h3>Progress Produktivitas</h3>
+            <p>Persentase kegiatan yang sudah kamu selesaikan.</p>
+          </div>
+          <strong class="pct-badge" id="progressPctBadge">0%</strong>
+        </div>
+        <div class="bar bar-lg"><div class="bar-fill" id="progressBar" style="width:0%"></div></div>
+        <div class="progress-meta">
+          <span id="progressText">Belum ada kegiatan</span>
+          <span id="progressRatio">0 / 0</span>
+        </div>
+
+        <div class="priority-summary">
+          <div class="prio-row"><span class="dot prio-high"></span>Prioritas tinggi <strong id="countHigh">0</strong></div>
+          <div class="prio-row"><span class="dot prio-medium"></span>Prioritas sedang <strong id="countMedium">0</strong></div>
+          <div class="prio-row"><span class="dot prio-low"></span>Prioritas rendah <strong id="countLow">0</strong></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <h3>Jadwal Hari Ini</h3>
+            <p>Kegiatan hari ini diurutkan berdasarkan waktu.</p>
+          </div>
+          <button class="link-btn" data-view="schedule">Lihat semua</button>
+        </div>
+        <div id="todayList" class="mini-list"></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ KEGIATAN ============ -->
+  <section class="view" id="view-tasks">
+    <div class="card">
+      <div class="card-head wrap">
+        <div>
+          <h3>Daftar Kegiatan</h3>
+          <p>Catat tugas kuliah, belajar, dan kegiatan harianmu.</p>
+        </div>
+        <div class="filter-chips" role="group" aria-label="Filter kegiatan">
+          <button class="chip active" data-filter="all">Semua</button>
+          <button class="chip" data-filter="pending">Belum selesai</button>
+          <button class="chip" data-filter="done">Selesai</button>
+        </div>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ JADWAL ============ -->
+  <section class="view" id="view-schedule">
+    <div class="card">
+      <div class="card-head wrap">
+        <div>
+          <h3>Jadwal Harian</h3>
+          <p>Urut dari waktu paling awal hingga paling akhir.</p>
+        </div>
+        <div class="schedule-controls">
+          <input type="date" id="scheduleDate" class="input input-date" aria-label="Pilih tanggal jadwal" />
+          <button class="btn btn-soft" id="scheduleTodayBtn">Hari ini</button>
+        </div>
+      </div>
+      <div class="schedule-date-label" id="scheduleDateLabel">—</div>
+      <div id="scheduleList" class="timeline"></div>
+    </div>
+  </section>
+
+  <!-- ============ KALENDER ============ -->
+  <section class="view" id="view-calendar">
+    <div class="calendar-layout">
+      <div class="card">
+        <div class="card-head wrap">
+          <div>
+            <h3 id="calendarTitle">—</h3>
+            <p>Tanggal bertanda titik memiliki kegiatan.</p>
+          </div>
+          <div class="cal-nav">
+            <button class="icon-btn" id="calPrev" aria-label="Bulan sebelumnya"><svg class="ico"><use href="#i-left"/></svg></button>
+            <button class="icon-btn" id="calNext" aria-label="Bulan berikutnya"><svg class="ico"><use href="#i-right"/></svg></button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="cal-legend">
+          <span><i class="dot prio-high"></i> Tinggi</span>
+          <span><i class="dot prio-medium"></i> Sedang</span>
+          <span><i class="dot prio-low"></i> Rendah</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3 id="calSelectedTitle">Pilih tanggal</h3>
+            <p id="calSelectedSub">Kegiatan pada tanggal yang dipilih.</p>
+          </div>
+        </div>
+        <div id="calDayList" class="mini-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TIMER ============ -->
+  <section class="view" id="view-timer">
+    <div class="timer-layout">
+      <article class="card timer-card">
+        <div class="mode-switch" role="group" aria-label="Mode timer">
+          <button class="mode-btn active" data-mode="focus">Fokus 25 menit</button>
+          <button class="mode-btn" data-mode="break">Istirahat 5 menit</button>
+        </div>
+
+        <div class="timer-ring-wrap">
+          <svg viewBox="0 0 240 240" class="timer-ring">
+            <circle class="timer-track" cx="120" cy="120" r="104"/>
+            <circle class="timer-fill" id="timerRing" cx="120" cy="120" r="104"/>
+          </svg>
+          <div class="timer-center">
+            <span id="timerModeLabel">Fokus</span>
+            <strong id="timerDisplay">25:00</strong>
+            <small id="timerStatus">Siap dimulai</small>
+          </div>
+        </div>
+
+        <div class="timer-actions">
+          <button class="btn btn-primary btn-lg" id="timerStart">
+            <svg class="ico"><use href="#i-play"/></svg><span id="timerStartLabel">Mulai</span>
+          </button>
+          <button class="btn btn-ghost btn-lg" id="timerPause" disabled>
+            <svg class="ico"><use href="#i-pause"/></svg><span>Jeda</span>
+          </button>
+          <button class="btn btn-ghost btn-lg" id="timerReset">
+            <svg class="ico"><use href="#i-reset"/></svg><span>Reset</span>
+          </button>
+        </div>
+
+        <p class="timer-note">Gunakan teknik Pomodoro: fokus 25 menit, lalu istirahat 5 menit. Sesi akan otomatis berpindah setelah waktu habis.</p>
+      </article>
+
+      <aside class="timer-side">
+        <article class="card">
+          <h3>Tips Fokus</h3>
+          <ul class="tips">
+            <li>Jauhkan notifikasi dan media sosial selama sesi fokus.</li>
+            <li>Tulis satu tujuan kecil sebelum timer dimulai.</li>
+            <li>Gunakan waktu istirahat untuk berdiri dan minum air.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Sesi Hari Ini</h3>
+          <div class="session-stats">
+            <div><strong id="focusCount">0</strong><span>sesi fokus</span></div>
+            <div><strong id="focusMinutes">0</strong><span>menit fokus</span></div>
+          </div>
+        </article>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- ================= FORM MODAL ================= -->
+<div class="modal" id="taskModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Tambah Kegiatan</h3>
+        <p>Isi detail kegiatan untuk mengatur waktumu.</p>
+      </div>
+      <button class="icon-btn" data-close-modal aria-label="Tutup"><svg class="ico"><use href="#i-close"/></svg></button>
+    </div>
+    <form id="taskForm" novalidate>
+      <label class="field">
+        <span>Nama kegiatan <em>*</em></span>
+        <input type="text" id="taskName" class="input" placeholder="Contoh: Belajar Algoritma" maxlength="80" autocomplete="off" />
+        <small class="error-text" id="errName"></small>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Tanggal <em>*</em></span>
+          <input type="date" id="taskDate" class="input" />
+          <small class="error-text" id="errDate"></small>
+        </label>
+        <label class="field">
+          <span>Waktu <em>*</em></span>
+          <input type="time" id="taskTime" class="input" />
+          <small class="error-text" id="errTime"></small>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Prioritas</span>
+        <div class="priority-picker" id="priorityPicker">
+          <button type="button" class="prio-option" data-priority="low"><i class="dot prio-low"></i>Rendah</button>
+          <button type="button" class="prio-option active" data-priority="medium"><i class="dot prio-medium"></i>Sedang</button>
+          <button type="button" class="prio-option" data-priority="high"><i class="dot prio-high"></i>Tinggi</button>
+        </div>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+        <button type="submit" class="btn btn-primary" id="saveTaskBtn">Simpan Kegiatan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
